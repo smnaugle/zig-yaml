@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     zig.url = "github:mitchellh/zig-overlay";
     zls.url = "github:zigtools/zls";
-    poop.url = "github:kubkon/poop/nix";
+    poop.url = "git+https://codeberg.org/kubkon/poop";
 
     # Used for shell.nix
     flake-compat = {
@@ -35,7 +35,7 @@
           nativeBuildInputs = [ zig ];
         });
         poop = inputs.poop.packages.${system}.default.overrideAttrs (old: {
-          nativeBuildInputs = [ zig ];
+          nativeBuildInputs = [ inputs.zig.packages.${system}."0.16.0" ];
         });
 
         linuxSpecific = pkgs.lib.optionals pkgs.stdenv.isLinux [ poop ];

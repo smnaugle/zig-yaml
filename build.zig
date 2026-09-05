@@ -20,6 +20,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("examples/yaml.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     const example = b.addExecutable(.{
         .name = "yaml",
