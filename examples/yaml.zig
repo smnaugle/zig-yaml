@@ -5,9 +5,6 @@ const Yaml = @import("yaml").Yaml;
 
 const mem = std.mem;
 
-var gpa_alloc = std.heap.GeneralPurposeAllocator(.{}){};
-const gpa = gpa_alloc.allocator();
-
 const usage =
     \\Usage: yaml <path-to-yaml>
     \\
@@ -56,6 +53,7 @@ fn logFn(
 pub const std_options: std.Options = .{ .logFn = logFn };
 
 pub fn main(init: std.process.Init.Minimal) !void {
+    const gpa = std.heap.c_allocator;
     var arena_alloc = std.heap.ArenaAllocator.init(gpa);
     defer arena_alloc.deinit();
     const arena = arena_alloc.allocator();
@@ -72,8 +70,10 @@ pub fn main(init: std.process.Init.Minimal) !void {
 
     var stdout_buffer: [1024]u8 = undefined;
     var stdout = std.Io.File.stdout().writer(io, &stdout_buffer);
+    defer stdout.interface.flush() catch {};
     var stderr_buffer: [1024]u8 = undefined;
     var stderr = std.Io.File.stderr().writer(io, &stderr_buffer);
+    defer stderr.interface.flush() catch {};
 
     var file_path: ?[]const u8 = null;
     var arg_index: usize = 0;

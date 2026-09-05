@@ -3,13 +3,14 @@ const fs = std.fs;
 const mem = std.mem;
 
 const Allocator = mem.Allocator;
+const Configuration = std.Build.Configuration;
 const Step = std.Build.Step;
 const SpecTest = @This();
 
-pub const base_id: Step.Id = .custom;
+pub const base_tag: Step.Tag = .custom;
 
 step: Step,
-output_file: std.Build.GeneratedFile,
+output_file: Configuration.GeneratedFileIndex,
 
 const test_filename = "yaml_test_suite.zig";
 
@@ -53,11 +54,17 @@ const preamble =
 ;
 
 pub fn create(owner: *std.Build) *SpecTest {
-    const spec_test = owner.allocator.create(SpecTest) catch @panic("OOM");
+    const graph = owner.graph;
+    const arena = graph.arena;
+    const spec_test = arena.create(SpecTest) catch @panic("OOM");
 
     spec_test.* = .{
-        .step = Step.init(.{ .id = base_id, .name = "yaml-test-generate", .owner = owner, .makeFn = make }),
-        .output_file = std.Build.GeneratedFile{ .step = &spec_test.step },
+        .step = Step.init(.{
+            .tag = base_tag,
+            .name = "yaml-test-generate",
+            .owner = owner,
+        }),
+        .output_file = graph.addGeneratedFile(&spec_test.step),
     };
     return spec_test;
 }
