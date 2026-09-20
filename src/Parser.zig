@@ -49,7 +49,7 @@ pub fn parse(self: *Parser, gpa: Allocator) ParseError!void {
     var prev_line_last_col: u32 = 0;
 
     while (true) {
-        const tok = tokenizer.next();
+        const tok = tokenizer.next() catch return error.MalformedYaml;
         const tok_index = try self.tokens.addOne(gpa);
 
         self.tokens.set(tok_index, .{

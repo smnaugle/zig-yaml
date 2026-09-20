@@ -374,6 +374,17 @@ test "simple map typed" {
     try testing.expectEqualStrings("wait, what?", simple.c);
 }
 
+test "unclosed string" {
+    const source =
+        \\a: 'b
+    ;
+
+    var yaml: Yaml = .{ .source = source };
+    defer yaml.deinit(testing.allocator);
+
+    try testing.expectError(error.MalformedYaml, yaml.load(testing.allocator));
+}
+
 test "typed nested structs" {
     const source =
         \\a:

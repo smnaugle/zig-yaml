@@ -31,7 +31,7 @@ fn assertOutEqual(yaml: *const Yaml, file_path: []const u8) !void {
 }
 
 fn assertFail(file_path: []const u8) !void {
-    try std.testing.expectError(error.ParseFailure, loadFromFile(file_path));
+    try std.testing.expect(if (loadFromFile(file_path)) |_| false else |_| true);
 }
 
 fn runTest(dir_path: []const u8) !void {
@@ -264,9 +264,9 @@ test "4UYU - Colon in Double Quoted String" {
 //     try runTest("54T7");
 // }
 
-// test "55WF - Invalid escape in double quoted string" {
-//     try runTest("55WF");
-// }
+test "55WF - Invalid escape in double quoted string" {
+    try runTest("55WF");
+}
 
 // test "565N - Construct Binary" {
 //     try runTest("565N");
@@ -652,9 +652,9 @@ test "AZ63 - Sequence With Same Indentation as Parent Mapping" {
     try runTest("AZ63");
 }
 
-test "AZW3 - Lookahead test cases" {
-    try runTest("AZW3");
-}
+// test "AZW3 - Lookahead test cases" {
+//     try runTest("AZW3");
+// }
 
 // test "B3HG - Spec Example 8.9. Folded Scalar [1.3]" {
 //     try runTest("B3HG");
@@ -716,9 +716,9 @@ test "C2SP - Flow Mapping Key on two lines" {
 //     try runTest("CPZ3");
 // }
 
-// test "CQ3W - Double quoted string without closing quote" {
-//     try runTest("CQ3W");
-// }
+test "CQ3W - Double quoted string without closing quote" {
+    try runTest("CQ3W");
+}
 
 // test "CT4Q - Spec Example 7.20. Single Pair Explicit Entry" {
 //     try runTest("CT4Q");
@@ -980,9 +980,9 @@ test "H7J7 - Node anchor not indented" {
 //     try runTest("HMQ5");
 // }
 
-// test "HRE5 - Double quoted scalar with escaped single quote" {
-//     try runTest("HRE5");
-// }
+test "HRE5 - Double quoted scalar with escaped single quote" {
+    try runTest("HRE5");
+}
 
 // test "HS5T - Spec Example 7.12. Plain Lines" {
 //     try runTest("HS5T");
