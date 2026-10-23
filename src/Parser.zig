@@ -29,7 +29,7 @@ errors: ErrorBundle.Wip,
 
 pub fn init(gpa: Allocator, source: []const u8) Allocator.Error!Parser {
     var self: Parser = .{ .source = source, .errors = undefined };
-    try self.errors.init(gpa);
+    self.errors = try ErrorBundle.Wip.init(gpa);
     return self;
 }
 
