@@ -99,7 +99,7 @@ fn matchesPattern(self: Tokenizer, comptime pattern: []const u8) bool {
     return stringMatchesPattern(pattern, self.buffer[self.index..]);
 }
 
-pub fn next(self: *Tokenizer) Token {
+pub fn next(self: *Tokenizer) TokenizeError!Token {
     var result = Token{
         .id = .eof,
         .loc = .{
@@ -116,6 +116,7 @@ pub fn next(self: *Tokenizer) Token {
         comment,
         single_quoted,
         double_quoted,
+        quote_end,
         literal,
     } = .start;
 
@@ -263,6 +264,7 @@ pub fn next(self: *Tokenizer) Token {
             .single_quoted => switch (c) {
                 '\'' => if (!self.matchesPattern("''")) {
                     result.id = .single_quoted;
+                    state = .quote_end;
                     self.index += 1;
                     break;
                 } else {
@@ -277,12 +279,15 @@ pub fn next(self: *Tokenizer) Token {
                         self.index += 1;
                     } else {
                         result.id = .double_quoted;
+                        state = .quote_end;
                         self.index += 1;
                         break;
                     }
                 },
                 else => {},
             },
+
+            .quote_end => break,
 
             .literal => switch (c) {
                 '\r', '\n', ' ', '\'', '"', ']', '}' => {
@@ -308,6 +313,11 @@ pub fn next(self: *Tokenizer) Token {
         }
     }
 
+    switch (state) {
+        .single_quoted, .double_quoted => return error.UnclosedQuote,
+        else => {},
+    }
+
     if (self.index >= self.buffer.len) {
         switch (state) {
             .literal => {
@@ -325,6 +335,10 @@ pub fn next(self: *Tokenizer) Token {
     return result;
 }
 
+pub const TokenizeError = error{
+    UnclosedQuote,
+};
+
 fn testExpected(source: []const u8, expected: []const Token.Id) !void {
     var tokenizer = Tokenizer{
         .buffer = source,
@@ -334,7 +348,7 @@ fn testExpected(source: []const u8, expected: []const Token.Id) !void {
     defer given.deinit();
 
     while (true) {
-        const token = tokenizer.next();
+        const token = try tokenizer.next();
         try given.append(token.id);
         if (token.id == .eof) break;
     }

@@ -29,7 +29,7 @@ errors: ErrorBundle.Wip,
 
 pub fn init(gpa: Allocator, source: []const u8) Allocator.Error!Parser {
     var self: Parser = .{ .source = source, .errors = undefined };
-    try self.errors.init(gpa);
+    self.errors = try ErrorBundle.Wip.init(gpa);
     return self;
 }
 
@@ -49,7 +49,7 @@ pub fn parse(self: *Parser, gpa: Allocator) ParseError!void {
     var prev_line_last_col: u32 = 0;
 
     while (true) {
-        const tok = tokenizer.next();
+        const tok = tokenizer.next() catch return error.MalformedYaml;
         const tok_index = try self.tokens.addOne(gpa);
 
         self.tokens.set(tok_index, .{
@@ -121,15 +121,15 @@ fn addExtraAssumeCapacity(self: *Parser, extra: anytype) u32 {
     return result;
 }
 
-fn payloadToExtraItems(data: anytype) [@typeInfo(@TypeOf(data)).@"struct".fields.len]u32 {
-    const fields = @typeInfo(@TypeOf(data)).@"struct".fields;
-    var result: [fields.len]u32 = undefined;
-    inline for (&result, fields) |*val, field| {
-        val.* = switch (field.type) {
-            u32 => @field(data, field.name),
-            i32 => @bitCast(@field(data, field.name)),
-            Node.Index, Node.OptionalIndex, Token.Index => @intFromEnum(@field(data, field.name)),
-            else => @compileError("bad field type: " ++ @typeName(field.type)),
+fn payloadToExtraItems(data: anytype) [@typeInfo(@TypeOf(data)).@"struct".field_names.len]u32 {
+    const struct_info = @typeInfo(@TypeOf(data)).@"struct";
+    var result: [struct_info.field_names.len]u32 = undefined;
+    inline for (&result, struct_info.field_types, struct_info.field_names) |*val, field_type, field_name| {
+        val.* = switch (field_type) {
+            u32 => @field(data, field_name),
+            i32 => @bitCast(@field(data, field_name)),
+            Node.Index, Node.OptionalIndex, Token.Index => @intFromEnum(@field(data, field_name)),
+            else => @compileError("bad field type: " ++ @typeName(field_type)),
         };
     }
     return result;
